@@ -189,7 +189,8 @@ window.dash = (() => {
     }
     window.dash._run();
     lastLoad = Date.now();
-    $('#stamp').textContent = '장부 ' + when(data.at) + ' 기준 · 받은 시각 ' + when(new Date().toISOString());
+    $('#stamp').textContent = '장부 ' + when(data.at);
+    $('#stamp').title = '받은 시각 ' + when(new Date().toISOString());
     note('');
   };
 
