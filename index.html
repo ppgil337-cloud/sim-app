@@ -175,10 +175,13 @@ window.dash = (() => {
   };
 
   const load = async (dataEnv) => {
-    const [penv, denv] = await Promise.all([pageReady ? null : getEnc('page.enc'), dataEnv || getEnc('data.enc')]);
+    // brief.enc (경제 브리핑·내 포트폴리오) 는 없거나 못 열어도 나머지 화면은 연다
+    const [penv, denv, benv] = await Promise.all([pageReady ? null : getEnc('page.enc'), dataEnv || getEnc('data.enc'), getEnc('brief.enc').catch(() => null)]);
     const data = await unseal(denv);
     const page = penv ? await unseal(penv) : null;
+    const br = benv ? await unseal(benv).catch(() => null) : null;
     window.__raw = Object.assign(window.__raw || {}, {portfolio: data.portfolio, activity: data.activity});
+    if (br) Object.assign(window.__raw, {briefing: br.briefing || [], mine: br.mine || []});
     if (page) {
       window.__raw.research = page.research || [];
       $('#lock').hidden = true;
