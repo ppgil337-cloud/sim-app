@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>천만원 모의투자</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#faf9f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1f1e1d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="모의투자">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+:root{
+  --color-fg:#1a1a1a;--color-fg-muted:#6b6b6b;--color-bg:#faf9f5;--color-panel:#fff;--color-border-line:#e3e1da;
+  --color-ok:#2e9e5b;--color-bad:#c8372d;--cds-text-secondary:#6b6b6b;--cds-border:#ddd;
+  --cds-chart-grid:#eeece6;--cds-chart-reference:#999;--cds-chart-muted:#b3b0a8;
+  --cds-surface-popover:#fff;--cds-shadow-popover:0 2px 10px #0002;
+  --cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:12px;--cds-gap-lg:20px;
+  --cds-pad-xs:4px;--cds-pad-sm:8px;--cds-pad-md:12px;--cds-pad-lg:16px;--cds-radius:10px;
+  --cds-font-size-title:28px;--cds-font-size-heading:17px;--cds-font-size-body:15px;--cds-font-size-caption:13px;
+  --cds-font-weight-medium:500;--cds-dur-slow:300ms;
+  --font-anthropic-sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+  --font-anthropic-serif:"Noto Serif KR","AppleMyungjo",ui-serif,Georgia,serif;
+  --accent:#1f3a68;color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --color-fg:#ecebe7;--color-fg-muted:#a3a19b;--color-bg:#1f1e1d;--color-panel:#2a2927;--color-border-line:#3d3b38;
+  --color-ok:#4cc27c;--color-bad:#ff6b5e;--cds-text-secondary:#a3a19b;--cds-border:#444;
+  --cds-chart-grid:#363431;--cds-chart-reference:#8a8781;--cds-chart-muted:#6f6c66;
+  --cds-surface-popover:#2f2e2b;--cds-shadow-popover:0 2px 12px #0008;--accent:#8fb0ea;color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--color-bg);color:var(--color-fg);font-family:var(--font-anthropic-sans);font-size:var(--cds-font-size-body);line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-right)) max(28px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+#bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;padding:max(8px,env(safe-area-inset-top)) 0 8px;background:color-mix(in srgb,var(--color-bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+#bar .grow{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bar button{font:inherit;color:var(--color-fg);background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:5px 12px;min-height:32px;cursor:pointer}
+#bar button:disabled{opacity:.55}
+#msg{margin:8px 0 0;font-size:var(--cds-font-size-caption);color:var(--color-bad)}
+#lock{min-height:100svh;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left))}
+#lock form{width:min(360px,100%);display:flex;flex-direction:column;gap:12px;background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:16px;padding:24px}
+#lock img{width:56px;height:56px;border-radius:13px}
+#lock h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:24px;margin:0}
+#lock p{margin:0;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+#lock input[type=password]{font:inherit;font-size:16px;padding:12px;border-radius:10px;border:1px solid var(--color-border-line);background:var(--color-bg);color:var(--color-fg);width:100%}
+#lock label{display:flex;gap:8px;align-items:center;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+#lock button{font:inherit;font-size:16px;padding:12px;border:0;border-radius:10px;background:var(--accent);color:var(--color-bg);cursor:pointer}
+#lock button:disabled{opacity:.6}
+#lock .err{color:var(--color-bad);min-height:1.2em}
+#boot{padding:40px 0;text-align:center;color:var(--color-fg-muted)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="lock" hidden>
+  <form autocomplete="on">
+    <img src="apple-touch-icon.png" alt="">
+    <h1>천만원 모의투자</h1>
+    <p>암호를 넣으면 이 기기에서 장부를 풉니다. 암호는 어디로도 보내지 않고, 이 기기 안에서만 씁니다.</p>
+    <input type="text" name="username" autocomplete="username" value="모의투자" hidden>
+    <input type="password" id="pw" name="password" autocomplete="current-password" placeholder="앱 암호" required>
+    <label><input type="checkbox" id="remember" checked> 이 기기에서 기억하기</label>
+    <button type="submit" id="go">열기</button>
+    <p class="err" role="alert" id="err"></p>
+  </form>
+</div>
+<div class="wrap" id="main" hidden>
+  <div id="bar">
+    <span class="grow" id="stamp">불러오는 중…</span>
+    <button type="button" id="refresh">새로 고침</button>
+    <button type="button" id="lockbtn">잠그기</button>
+  </div>
+  <p id="msg" role="status" hidden></p>
+  <div id="boot">장부를 푸는 중…</div>
+  <div id="app"></div>
+</div>
+<script>
+window.dash = (() => {
+  const calcs = {}, draws = {}, cbs = [], data = {};
+  return {
+    calc(id, o) { calcs[id] = o; },
+    draw(n, fn) {
+      if (fn) { draws[n] = fn; return; }
+      document.querySelectorAll('[data-draw="' + n + '"]').forEach((el) => draws[n](el));
+    },
+    data(id) { return data[id] || {status: 'loading'}; },
+    onData(f) { cbs.push(f); },
+    setLink(id) { try { history.replaceState(null, '', id ? '#' + id : location.pathname + location.search); } catch (e) {} },
+    colors: ['#2c6fd0', '#d0602c', '#3a9a5b', '#8a5ad0'],
+    _run() {
+      for (const [id, o] of Object.entries(calcs)) {
+        try { data[id] = {status: 'ok', data: o.fn(...o.inputs.map((i) => window.__raw[i] || []))}; }
+        catch (e) { console.error(id, e); data[id] = {status: 'error', error: String(e)}; }
+      }
+      document.querySelectorAll('[data-draw]').forEach((el) => {
+        const f = draws[el.dataset.draw];
+        if (f) { try { f(el); } catch (e) { console.error(el.dataset.draw, e); } }
+      });
+      cbs.forEach((f) => { try { f(); } catch (e) { console.error(e); } });
+    },
+  };
+})();
+
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const KEY = 'simapp.key', SALT = 'simapp.salt';
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+  };
+  const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+  const ub64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+  class Relock extends Error {}
+  let key = null, pageReady = false, lastLoad = 0, busy = false;
+
+  const getEnc = async (name) => {
+    if (window.__ENC && window.__ENC[name]) return window.__ENC[name];
+    const r = await fetch(name + '?t=' + Date.now(), {cache: 'no-store'});
+    if (!r.ok) throw new Error(name + ' 응답 ' + r.status);
+    return r.json();
+  };
+  const derive = async (pass, env) => {
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass.normalize('NFC')), 'PBKDF2', false, ['deriveBits']);
+    return crypto.subtle.deriveBits({name: 'PBKDF2', hash: 'SHA-256', salt: b64(env.salt), iterations: env.iter}, base, 256);
+  };
+  const useKey = async (raw) => { key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']); };
+  const unseal = async (env) => {
+    if (store.get(SALT) && env.salt !== store.get(SALT)) throw new Relock('암호 설정이 바뀌었습니다. 다시 넣어 주세요.');
+    let pt;
+    try { pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: b64(env.iv)}, key, b64(env.ct)); }
+    catch (e) { throw new Relock('암호가 바뀌었습니다. 다시 넣어 주세요.'); }
+    return JSON.parse(new TextDecoder().decode(pt));
+  };
+
+  const mount = (html) => {
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    const scripts = [...tpl.content.querySelectorAll('script')];
+    scripts.forEach((s) => s.remove());
+    $('#app').replaceChildren(tpl.content);
+    for (const s of scripts) {
+      const n = document.createElement('script');
+      n.textContent = s.textContent;
+      document.body.append(n);
+    }
+  };
+
+  const when = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d)) return String(iso);
+    const p = (n) => String(n).padStart(2, '0');
+    return `${d.getMonth() + 1}/${d.getDate()}(${'일월화수목금토'[d.getDay()]}) ${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+  const note = (t) => { const m = $('#msg'); m.textContent = t || ''; m.hidden = !t; };
+
+  const showLock = (why) => {
+    key = null;
+    $('#main').hidden = true;
+    $('#lock').hidden = false;
+    $('#err').textContent = why || '';
+    $('#go').disabled = false;
+    setTimeout(() => $('#pw').focus(), 50);
+  };
+
+  const load = async (dataEnv) => {
+    const [penv, denv] = await Promise.all([pageReady ? null : getEnc('page.enc'), dataEnv || getEnc('data.enc')]);
+    const data = await unseal(denv);
+    const page = penv ? await unseal(penv) : null;
+    window.__raw = Object.assign(window.__raw || {}, {portfolio: data.portfolio, activity: data.activity});
+    if (page) {
+      window.__raw.research = page.research || [];
+      $('#lock').hidden = true;
+      $('#main').hidden = false;
+      mount(page.html);
+      pageReady = true;
+      $('#boot').hidden = true;
+    }
+    window.dash._run();
+    lastLoad = Date.now();
+    $('#stamp').textContent = '장부 ' + when(data.at) + ' 기준 · 받은 시각 ' + when(new Date().toISOString());
+    note('');
+  };
+
+  const refresh = async (quiet) => {
+    if (busy || !key) return;
+    busy = true;
+    $('#refresh').disabled = true;
+    try { await load(); }
+    catch (e) {
+      if (e instanceof Relock) { store.del(KEY); store.del(SALT); location.reload(); return; }
+      if (!quiet || !pageReady) note('새 장부를 못 받았습니다 (' + (e.message || e) + '). 연결을 확인하고 새로 고침을 눌러 주세요.');
+      if (!pageReady) { $('#boot').textContent = '장부를 못 받았습니다.'; }
+    } finally { busy = false; $('#refresh').disabled = false; }
+  };
+
+  $('#lock form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const pass = $('#pw').value;
+    if (!pass) return;
+    $('#go').disabled = true;
+    $('#err').textContent = '여는 중…';
+    try {
+      const env = await getEnc('data.enc');
+      const bits = await derive(pass, env);
+      await useKey(bits);
+      store.del(SALT);
+      try { await unseal(env); } catch (e) { throw new Error('암호가 맞지 않습니다.'); }
+      if ($('#remember').checked) { store.set(KEY, ub64(bits)); store.set(SALT, env.salt); }
+      $('#pw').value = '';
+      $('#err').textContent = '';
+      await load(env);
+    } catch (e) {
+      key = null;
+      $('#err').textContent = e.message || String(e);
+      $('#go').disabled = false;
+    }
+  });
+  $('#refresh').addEventListener('click', () => refresh(false));
+  $('#lockbtn').addEventListener('click', () => { store.del(KEY); store.del(SALT); location.reload(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && Date.now() - lastLoad > 60000) refresh(true);
+  });
+  setInterval(() => { if (document.visibilityState === 'visible' && Date.now() - lastLoad > 290000) refresh(true); }, 30000);
+
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
+  (async () => {
+    const saved = store.get(KEY);
+    if (!saved) { showLock(); return; }
+    try {
+      await useKey(b64(saved));
+      $('#main').hidden = false;
+      await load();
+    } catch (e) {
+      if (e instanceof Relock) { store.del(KEY); store.del(SALT); showLock(e.message); return; }
+      $('#main').hidden = false;
+      $('#boot').textContent = '장부를 못 받았습니다. 연결을 확인하고 새로 고침을 눌러 주세요.';
+      note(String(e.message || e));
+    }
+  })();
+})();
+</script>
+</body>
+</html>
