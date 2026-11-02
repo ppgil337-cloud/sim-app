@@ -122,7 +122,7 @@ window.dash = (() => {
   const b64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
   const ub64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
   class Relock extends Error {}
-  let key = null, pageReady = false, lastLoad = 0, busy = false;
+  let key = null, pageReady = false, lastLoad = 0, busy = false, pageCt = null;
 
   const getEnc = async (name) => {
     if (window.__ENC && window.__ENC[name]) return window.__ENC[name];
@@ -176,9 +176,15 @@ window.dash = (() => {
 
   const load = async (dataEnv) => {
     // brief.enc (경제 브리핑·내 포트폴리오) 는 없거나 못 열어도 나머지 화면은 연다
-    const [penv, denv, benv] = await Promise.all([pageReady ? null : getEnc('page.enc'), dataEnv || getEnc('data.enc'), getEnc('brief.enc').catch(() => null)]);
+    // 화면(page.enc)도 새로 고칠 때마다 확인한다. 새 화면이 올라왔으면 기억된 암호로 다시 연다 (전에는 앱을 완전히 닫아야 바뀌었다)
+    const [penv, denv, benv] = await Promise.all([getEnc('page.enc').catch((e) => { if (!pageReady) throw e; return null; }), dataEnv || getEnc('data.enc'), getEnc('brief.enc').catch(() => null)]);
+    let stale = '';
+    if (pageReady && penv && penv.ct !== pageCt) {
+      if (store.get(KEY)) { location.reload(); return; }
+      stale = '화면이 새로 바뀌었습니다. 앱을 완전히 닫았다가 다시 열면 보입니다.';
+    }
     const data = await unseal(denv);
-    const page = penv ? await unseal(penv) : null;
+    const page = !pageReady && penv ? await unseal(penv) : null;
     const br = benv ? await unseal(benv).catch(() => null) : null;
     window.__raw = Object.assign(window.__raw || {}, {portfolio: data.portfolio, activity: data.activity});
     if (br) Object.assign(window.__raw, {briefing: br.briefing || [], mine: br.mine || []});
@@ -188,13 +194,14 @@ window.dash = (() => {
       $('#main').hidden = false;
       mount(page.html);
       pageReady = true;
+      pageCt = penv.ct;
       $('#boot').hidden = true;
     }
     window.dash._run();
     lastLoad = Date.now();
     $('#stamp').textContent = '장부 ' + when(data.at);
     $('#stamp').title = '받은 시각 ' + when(new Date().toISOString());
-    note('');
+    note(stale);
   };
 
   const refresh = async (quiet) => {
